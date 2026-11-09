@@ -1,8 +1,5 @@
 # Parameterized Koopman
 
-Code for the paper *Policy-Conditioned Koopman Representations for Parameterized
-Closed-Loop Systems* (Kiran G. Krishnan and Shankar A. Deka).
-
 A single model is learned for a whole family of closed-loop systems
 x_{k+1} = F_theta(x_k), where theta is the parameter of a feedback law. The encoder,
 the decoder and the Koopman matrix all depend on theta:
