@@ -62,8 +62,8 @@ x_hat = model.predict(x0, theta, steps=12)    # shape (1, 12, 2)
 | `slow_manifold` | polynomial slow manifold, input in the first equation, 2 | 4 | 0.05 |
 | `slow_manifold_u2` | same system, input in the second equation, 2 | 4 | 0.05 |
 | `manipulator` | two-link arm with PD feedback, 4 | 4 | 0.05 |
-| `cartpole` | cart-pole, 4 | 4 (normalized to [-1, 1]) | 0.05 |
-| `mujoco_ip` | Gymnasium InvertedPendulum-v5, 4 | 4 | 0.04 |
+| `cartpole` | cart-pole, 4 | 4 | 0.05 |
+| `mujoco_ip` | Gymnasium InvertedPendulum-v5, 4 | 4 | 0.05 |
 | `mujoco_idp` | Gymnasium InvertedDoublePendulum-v5, 6 | 6 | 0.05 |
 
 For the cartpole and the MuJoCo systems the model sees a normalized parameter in
