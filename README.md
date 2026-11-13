@@ -37,6 +37,7 @@ pkoopman/
   systems/          Van der Pol, slow manifold, two-link arm, cartpole, MuJoCo pendulums
 baselines/          PKNN, EDMD, kernel EDMD, deep Koopman, NMPC, Koopman MPC
 scripts/            training, experiments and plots
+cluster/            SLURM job scripts for the experiments
 checkpoints/        trained models and their verified regions
 ```
 
@@ -133,6 +134,44 @@ then run the fixed feedback law. The per-system weights and horizons are in
 receding-horizon Koopman MPC with an EDMD or a deep Koopman model. The runs are
 deterministic, so different seeds only change the measured wall-clock time. NMPC for
 the double pendulum is not included.
+
+## Further experiments
+
+These go beyond the tables of the paper and are meant to be run on a cluster.
+`python scripts/collect_results.py` gathers whatever has finished into
+`runs/summary.md`.
+
+**Region check.** `scripts/region_check.py <system>` draws 1500 new parameters
+from the hull of the verified region (with a seed not used in training), checks
+the model on each one and reports the survival rate at 10, 15 and 20% with
+confidence intervals, together with the fraction of the box Theta the hull covers.
+`scripts/train.py --threshold` rebuilds the region with another tolerance.
+
+**Prediction on held-out parameters.** `scripts/prediction_benchmark.py <system>
+--thetas fresh` uses new parameters from the region instead of the region samples
+the final model was trained on, and `--thetas box` uses parameters from the whole
+box, so every method is also tested outside the region chosen for our model. The
+two MuJoCo systems are supported too (add `--retrain` to include PKNN and deep
+Koopman). For the inverted pendulum these scripts map theta onto the gain box the
+model was trained with (`experiment_system` in `pkoopman/systems`).
+
+**Control from many initial states.** `scripts/control_benchmark.py` runs a method
+from 50 initial states and records success, settling time, closed-loop cost,
+control effort and online time (selection included). Besides the methods of
+Table III it has `centroid` (no selection, the mean of the region is deployed) and
+`sim_opt` (the same selection problem solved on the true simulator, the reference
+for what the surrogate gives up). `--T` and `--kick` give longer episodes with a
+mid-episode perturbation.
+
+**On a SLURM cluster** (written for Aalto Triton):
+
+```
+bash cluster/setup_env.sh        # once, creates the conda environment
+bash cluster/submit_all.sh       # every experiment above, plus the two ablations
+```
+
+The job scripts in `cluster/` can also be submitted one by one; each has its usage
+at the top. Logs go to `logs/`, results to `runs/`.
 
 ## Citation
 

@@ -85,10 +85,18 @@ def main():
     parser.add_argument("--seed", type=int, default=8)
     parser.add_argument("--scout-epochs", type=int, default=5000)
     parser.add_argument("--final-epochs", type=int, default=5000)
+    parser.add_argument("--threshold", type=float, default=None,
+                        help="region tolerance in percent (overrides the setting of the system)")
+    parser.add_argument("--check-steps", type=int, default=None,
+                        help="steps in the region test (overrides the setting of the system)")
     parser.add_argument("--out", default="runs/train")
     args = parser.parse_args()
 
-    cfg = CONFIGS[args.system]
+    cfg = dict(CONFIGS[args.system])
+    if args.threshold is not None:
+        cfg["threshold"] = args.threshold
+    if args.check_steps is not None:
+        cfg["check_steps"] = args.check_steps
     system = get_system(args.system)
     rng = np.random.default_rng(args.seed)
     torch.manual_seed(args.seed)
