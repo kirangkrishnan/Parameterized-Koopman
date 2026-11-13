@@ -10,8 +10,9 @@ estimated by Monte Carlo.
 
     python scripts/region_check.py vdp
     python scripts/region_check.py mujoco_idp --chunk 3 --n-chunks 20     # one piece of a cluster array
+    python scripts/region_check.py cartpole --checkpoints runs/train_tol10 --tag cartpole_tol10
 
-Each run writes runs/region_check/<system>/chunk<k>of<n>.npz.
+Each run writes runs/region_check/<tag>/chunk<k>of<n>.npz (the tag defaults to the system name).
 """
 import argparse
 import os
@@ -59,13 +60,16 @@ def main():
                         help="use only the first max-ic verification initial conditions")
     parser.add_argument("--chunk", type=int, default=0)
     parser.add_argument("--n-chunks", type=int, default=1)
+    parser.add_argument("--checkpoints", default=os.path.join(ROOT, "checkpoints"),
+                        help="folder with <system>.pt and <system>_region.npy")
+    parser.add_argument("--tag", default=None, help="name of the output folder")
     parser.add_argument("--out", default=os.path.join(ROOT, "runs", "region_check"))
     args = parser.parse_args()
 
     name = args.system
     system = experiment_system(name)
-    model = load_model(os.path.join(ROOT, "checkpoints", f"{name}.pt"))
-    region = np.load(os.path.join(ROOT, "checkpoints", f"{name}_region.npy"))
+    model = load_model(os.path.join(args.checkpoints, f"{name}.pt"))
+    region = np.load(os.path.join(args.checkpoints, f"{name}_region.npy"))
     hull = Delaunay(region)
 
     # every chunk draws the same full sample, then keeps its own slice
@@ -91,7 +95,7 @@ def main():
         box = system.sample_theta(np.random.default_rng(SEED + 1), 200_000)
         extra["volume_fraction"] = float(np.mean(hull.find_simplex(box) >= 0))
 
-    out_dir = os.path.join(args.out, name)
+    out_dir = os.path.join(args.out, args.tag or name)
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, f"chunk{args.chunk}of{args.n_chunks}.npz")
     np.savez(path, index=idx, thetas=thetas[idx], errors=errors, valid=valid,

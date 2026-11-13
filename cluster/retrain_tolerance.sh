@@ -13,3 +13,5 @@ source cluster/env.sh
 TOLS=(10 15 20)
 TOL=${TOLS[$CHUNK]}
 python scripts/train.py "$1" --threshold "$TOL" --out "runs/train_tol$TOL"
+# afterwards check each rebuilt region on fresh parameters, e.g.
+#   sbatch --array=0-9 cluster/region_check.sh cartpole --checkpoints runs/train_tol10 --tag cartpole_tol10
