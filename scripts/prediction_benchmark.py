@@ -84,10 +84,10 @@ def simulate(system, x0, theta, steps):
     return np.array(traj)
 
 
-def test_set(name, system, x0_scale, mode="region", n_theta=N_THETA, n_ic=N_IC):
+def test_set(name, system, x0_scale, mode="region", n_theta=N_THETA, n_ic=N_IC, ckpt=None):
     """Test parameters and initial conditions. mode "region" draws them exactly as
     in the paper runs; "fresh" and "box" use a seed that training never saw."""
-    region = np.load(os.path.join(ROOT, "checkpoints", f"{name}_region.npy"))
+    region = np.load(os.path.join(ckpt or os.path.join(ROOT, "checkpoints"), f"{name}_region.npy"))
     if mode == "region":
         thetas = region[np.random.default_rng(42).choice(len(region), n_theta, replace=False)]
     elif mode == "fresh":
@@ -150,10 +150,10 @@ def baselines(name, system, cfg, centroid, retrain, out_dir, neural=True):
     return pknn_model, dk_model, edmd, kedmd
 
 
-def predictors(name, system, cfg, centroid, retrain, out_dir, methods):
+def predictors(name, system, cfg, centroid, retrain, out_dir, methods, ckpt=None):
     """Each predictor maps (x0, theta, steps) to an array (steps, n) of x_1..x_steps."""
     # the paper evaluation ran our model through numpy in float64
-    ours = load_model(os.path.join(ROOT, "checkpoints", f"{name}.pt")).double()
+    ours = load_model(os.path.join(ckpt or os.path.join(ROOT, "checkpoints"), f"{name}.pt")).double()
     neural = any(m in methods for m in ("PKNN", "PKNN (re-lift)", "Deep Koopman"))
     pknn_model, dk_model, edmd, kedmd = baselines(name, system, cfg, centroid, retrain, out_dir, neural)
 
@@ -237,6 +237,8 @@ def main():
     parser.add_argument("--n-theta", type=int, default=N_THETA)
     parser.add_argument("--n-ic", type=int, default=N_IC)
     parser.add_argument("--methods", nargs="+", choices=METHODS, default=None)
+    parser.add_argument("--checkpoints", default=None,
+                        help="folder with our <system>.pt and <system>_region.npy (default checkpoints/)")
     parser.add_argument("--out", default=os.path.join(ROOT, "runs", "prediction_benchmark"))
     args = parser.parse_args()
     os.makedirs(args.out, exist_ok=True)
@@ -247,10 +249,12 @@ def main():
         methods = ["Ours", "EDMD", "Kernel-EDMD"]
     # the benchmark used the cartpole without the actuator limit
     system = get_system(name, u_max=None) if name == "cartpole" else experiment_system(name)
-    thetas, x0s, centroid = test_set(name, system, cfg["x0_scale"], args.thetas, args.n_theta, args.n_ic)
+    thetas, x0s, centroid = test_set(name, system, cfg["x0_scale"], args.thetas, args.n_theta, args.n_ic,
+                                    args.checkpoints)
 
     t0 = time.time()
-    predict_fns = predictors(name, system, cfg, centroid, args.retrain, args.out, methods)
+    predict_fns = predictors(name, system, cfg, centroid, args.retrain, args.out, methods,
+                             args.checkpoints)
     errors = evaluate(system, thetas, x0s, predict_fns)
     results = results_dict(name, errors, args.thetas)
 

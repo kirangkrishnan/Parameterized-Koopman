@@ -138,6 +138,8 @@ def main():
     parser.add_argument("--kick", type=float, default=0.0, help="mid-episode perturbation size, 0 = none")
     parser.add_argument("--tol", type=float, default=SUCCESS_TOL)
     parser.add_argument("--save-traj", action="store_true")
+    parser.add_argument("--checkpoints", default=str(ROOT / "checkpoints"),
+                        help="folder with our <system>.pt and <system>_region.npy")
     parser.add_argument("--out", default=str(ROOT / "runs" / "control_benchmark"))
     args = parser.parse_args()
     name, method = args.system, args.method
@@ -158,8 +160,8 @@ def main():
 
     x0s = initial_states(name, args.n_x0)
     idx = np.array_split(np.arange(args.n_x0), args.n_chunks)[args.chunk]
-    region = np.load(ROOT / "checkpoints" / f"{name}_region.npy")
-    model = load_model(ROOT / "checkpoints" / f"{name}.pt") if method.startswith("ours") else None
+    region = np.load(Path(args.checkpoints) / f"{name}_region.npy")
+    model = load_model(Path(args.checkpoints) / f"{name}.pt") if method.startswith("ours") else None
     ctrl = make_controller(name, method, system) if method in ("nmpc", "kmpc_edmd", "kmpc_deep") else None
 
     tag = method + (f"_kick{args.kick:g}" if args.kick else "") + (f"_T{T:g}" if args.T else "")

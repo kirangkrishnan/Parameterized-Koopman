@@ -25,30 +25,32 @@ from scipy.spatial import Delaunay
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from pkoopman.model import load_model
-from pkoopman.region import sample_in_hull
+from pkoopman.region import sample_in_hull, simulate_all
 from pkoopman.systems import experiment_system
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-SEED = 2027
+SEED = 2027          # the reported checks of the Phase 3 regions use --seed 2031
 
 
-def worst_errors(model, system, theta, x0s, horizons):
-    """Worst-case normalized error (%) over all x0s for every horizon in horizons,
-    and whether the true closed loop passed system.is_valid(). A failed simulation
-    gives an infinite error."""
+def errors_at_horizons(model, system, thetas, x0s, horizons):
+    """Worst-case normalized error (%) over all x0s at every horizon in horizons,
+    one row per theta, and whether the true closed loop passed system.is_valid().
+    A failed simulation gives an infinite error."""
     steps = max(horizons)
-    trajs = [system.simulate(x0, theta, steps) for x0 in x0s]
-    valid = bool(system.is_valid(theta, trajs))
-    if any(tr is None for tr in trajs):
-        return np.full(len(horizons), np.inf), valid
+    all_trajs, valid = simulate_all(system, thetas, x0s, steps)
+    errors = np.full((len(thetas), len(horizons)), np.inf)
     x0_t = torch.tensor(np.asarray(x0s), dtype=torch.float32)
-    th = torch.tensor(theta, dtype=torch.float32).expand(len(x0s), -1)
-    with torch.no_grad():
-        pred = model.predict(x0_t, th, steps).numpy()
-    true = np.stack(trajs)[:, 1:]
-    scale = np.maximum(np.linalg.norm(true, axis=-1), 0.1)
-    err = 100.0 * np.linalg.norm(pred - true, axis=-1) / scale        # (n_x0, steps)
-    return np.array([err[:, :h].max() for h in horizons]), valid
+    for row, (theta, trajs) in enumerate(zip(thetas, all_trajs)):
+        if any(tr is None for tr in trajs):
+            continue
+        th = torch.tensor(theta, dtype=torch.float32).expand(len(x0s), -1)
+        with torch.no_grad():
+            pred = model.predict(x0_t, th, steps).numpy()
+        true = np.stack(trajs)[:, 1:]
+        scale = np.maximum(np.linalg.norm(true, axis=-1), 0.1)
+        err = 100.0 * np.linalg.norm(pred - true, axis=-1) / scale        # (n_x0, steps)
+        errors[row] = [err[:, :h].max() for h in horizons]
+    return errors, valid
 
 
 def main():
@@ -63,6 +65,7 @@ def main():
     parser.add_argument("--checkpoints", default=os.path.join(ROOT, "checkpoints"),
                         help="folder with <system>.pt and <system>_region.npy")
     parser.add_argument("--tag", default=None, help="name of the output folder")
+    parser.add_argument("--seed", type=int, default=SEED)
     parser.add_argument("--out", default=os.path.join(ROOT, "runs", "region_check"))
     args = parser.parse_args()
 
@@ -73,7 +76,7 @@ def main():
     hull = Delaunay(region)
 
     # every chunk draws the same full sample, then keeps its own slice
-    thetas = sample_in_hull(hull, region, args.n_samples, np.random.default_rng(SEED))
+    thetas = sample_in_hull(hull, region, args.n_samples, np.random.default_rng(args.seed))
     idx = np.array_split(np.arange(args.n_samples), args.n_chunks)[args.chunk]
     x0s = system.test_initial_conditions()
     if args.max_ic is not None:
@@ -81,18 +84,13 @@ def main():
 
     print(f"[{name}] chunk {args.chunk + 1}/{args.n_chunks}: {len(idx)} parameters, "
           f"{len(x0s)} initial conditions, horizons {args.horizons}", flush=True)
-    errors = np.empty((len(idx), len(args.horizons)))
-    valid = np.empty(len(idx), dtype=bool)
     t0 = time.time()
-    for row, i in enumerate(idx):
-        errors[row], valid[row] = worst_errors(model, system, thetas[i], x0s, args.horizons)
-        if (row + 1) % 25 == 0:
-            print(f"  {row + 1}/{len(idx)}  ({time.time() - t0:.0f} s)", flush=True)
+    errors, valid = errors_at_horizons(model, system, thetas[idx], x0s, args.horizons)
 
     extra = {}
     if args.chunk == 0:
         # fraction of the box Theta inside the hull, from 200k uniform samples
-        box = system.sample_theta(np.random.default_rng(SEED + 1), 200_000)
+        box = system.sample_theta(np.random.default_rng(args.seed + 1), 200_000)
         extra["volume_fraction"] = float(np.mean(hull.find_simplex(box) >= 0))
 
     out_dir = os.path.join(args.out, args.tag or name)

@@ -99,7 +99,9 @@ class FixedKoopman(PolicyKoopman):
 
 def evaluate(model, system, alpha, x0s):
     """Worst-case error over the horizon for every initial condition."""
-    true = np.stack([system.simulate(x0, alpha, HORIZON)[1:] for x0 in x0s])
+    trajs = [system.simulate(x0, alpha, HORIZON) for x0 in x0s]
+    x0s = np.asarray(x0s)[[tr is not None for tr in trajs]]      # skip closed loops that failed
+    true = np.stack([tr[1:] for tr in trajs if tr is not None])
     device = next(model.parameters()).device
     x0_t = torch.tensor(x0s, dtype=torch.float32, device=device)
     theta = torch.tensor(alpha, dtype=torch.float32, device=device).expand(len(x0s), -1)

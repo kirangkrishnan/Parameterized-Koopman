@@ -163,11 +163,24 @@ Table III it has `centroid` (no selection, the mean of the region is deployed) a
 for what the surrogate gives up). `--T` and `--kick` give longer episodes with a
 mid-episode perturbation.
 
+**Phase 3 with the final model.** `scripts/train.py` now ends by testing the
+final model on fresh parameters from the region (15% over 12 steps by default)
+and shrinking the region until 95% of them pass; the result is written to
+`<system>_phase3.json` next to the model. `scripts/verify_region.py <system>` does
+the same for a model that is already trained, such as the ones in `checkpoints/`.
+`--x0-margin` widens the box of training initial states, and every script that
+reads a model takes `--checkpoints <folder>`.
+
+**Ablation B on other benchmarks.** `scripts/ablation_dictionary.py --system <name>`
+compares the conditioned and the fixed dictionary on any analytic benchmark, at
+fresh parameters from its deployment region.
+
 **On a SLURM cluster** (written for Aalto Triton):
 
 ```
 bash cluster/setup_env.sh        # once, creates the conda environment
 bash cluster/submit_all.sh       # every experiment above, plus the two ablations
+bash cluster/submit_v2.sh        # Phase 3, retraining where it fails, ablation B on all benchmarks
 ```
 
 The job scripts in `cluster/` can also be submitted one by one; each has its usage

@@ -141,6 +141,23 @@ def control_section(runs):
     return lines + [""]
 
 
+def phase3_section(runs):
+    files = sorted(glob.glob(os.path.join(runs, "**", "*_phase3.json"), recursive=True))
+    if not files:
+        return []
+    lines = ["## Phase 3 (final model on fresh parameters, shrinking if needed)", "",
+             "| run | accepted | tolerance | steps | iterations | first pass rate | last pass rate | "
+             "median error first / last |", "|---|---|---|---|---|---|---|---|"]
+    for f in files:
+        r = json.load(open(f))
+        h = r["history"]
+        run = os.path.relpath(f, runs).replace("_phase3.json", "")
+        lines.append(f"| {run} | {'yes' if r['accepted'] else 'NO'} | {r['threshold']:g}% | {r['steps']} | "
+                     f"{len(h) - 1} | {h[0]['pass_rate']:.3f} | {h[-1]['pass_rate']:.3f} | "
+                     f"{h[0]['median_error']:.1f} / {h[-1]['median_error']:.1f} |")
+    return lines + [""]
+
+
 def ablation_section(runs):
     lines = []
     files = sorted(glob.glob(os.path.join(runs, "ablation_retraining", "seed_*.json")))
@@ -164,20 +181,29 @@ def ablation_section(runs):
                          f"{fmt(np.mean(u) if u else None, 3)} +- {fmt(np.std(u) if u else None, 3)} |")
         lines.append("")
     files = sorted(glob.glob(os.path.join(runs, "ablation_dictionary", "**", "results.json"), recursive=True))
-    if files:
-        recs = {"conditioned": [], "fixed_dictionary": []}
-        for f in files:
-            r = json.load(open(f))
-            for v in recs:
-                recs[v] += r[v]
-        n_alpha = 1 + max(x["alpha_idx"] for x in recs["conditioned"])
-        per = {v: np.array([np.mean([x["mean_err"] for x in recs[v] if x["alpha_idx"] == i])
-                            for i in range(n_alpha)]) for v in recs}
-        wins = int(np.sum(per["conditioned"] < per["fixed_dictionary"]))
+    groups = defaultdict(lambda: {"conditioned": [], "fixed_dictionary": []})
+    for f in files:
+        r = json.load(open(f))
+        key = (r.get("system", "cartpole"), r["config"].get("test_params") or "paper")
+        for v in groups[key]:
+            groups[key][v] += r[v]
+    if groups:
         lines += ["## Ablation B (conditioned vs fixed dictionary), all test parameters", "",
-                  f"Mean over {n_alpha} parameters: conditioned {per['conditioned'].mean():.3f}%, "
-                  f"fixed dictionary {per['fixed_dictionary'].mean():.3f}%. "
-                  f"Conditioned is lower at {wins} of {n_alpha}.", ""]
+                  "Mean over test parameters of the per-parameter mean error (averaged over seeds). "
+                  "'paper' = the 30 cartpole parameters of the paper runs, 'region' = 30 fresh "
+                  "parameters from the deployment region.", "",
+                  "| system | test parameters | seeds | conditioned (%) | fixed dictionary (%) | "
+                  "median paired difference | conditioned lower |", "|---|---|---|---|---|---|---|"]
+        for (system, tp), recs in sorted(groups.items()):
+            n_alpha = 1 + max(x["alpha_idx"] for x in recs["conditioned"])
+            per = {v: np.array([np.mean([x["mean_err"] for x in recs[v] if x["alpha_idx"] == i])
+                                for i in range(n_alpha)]) for v in recs}
+            seeds = len({x["seed"] for x in recs["conditioned"]})
+            diff = per["fixed_dictionary"] - per["conditioned"]
+            wins = int(np.sum(diff > 0))
+            lines.append(f"| {system} | {tp} | {seeds} | {per['conditioned'].mean():.3f} | "
+                         f"{per['fixed_dictionary'].mean():.3f} | {np.median(diff):+.3f} | {wins} of {n_alpha} |")
+        lines.append("")
     return lines
 
 
@@ -186,7 +212,7 @@ def main():
     parser.add_argument("--runs", default=os.path.join(ROOT, "runs"))
     args = parser.parse_args()
     lines = ["# Experiment summary", ""]
-    for section in (region_section, prediction_section, control_section, ablation_section):
+    for section in (phase3_section, region_section, prediction_section, control_section, ablation_section):
         lines += section(args.runs)
     path = os.path.join(args.runs, "summary.md")
     os.makedirs(args.runs, exist_ok=True)
