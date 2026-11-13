@@ -12,7 +12,8 @@ echo "region check (Phase 3 on fresh parameters)"
 for s in vdp slow_manifold slow_manifold_u2 manipulator cartpole mujoco_ip; do
   sub --array=0-9 cluster/region_check.sh "$s"
 done
-sub --array=0-29 cluster/region_check.sh mujoco_idp
+# the 6-D hull of the double pendulum needs several GB for its triangulation
+sub --array=0-29 --mem=16G cluster/region_check.sh mujoco_idp
 
 echo "prediction on fresh parameters from C and on the whole box"
 for s in vdp slow_manifold_u2 manipulator cartpole; do
