@@ -63,7 +63,7 @@ def generic_setup(system, seed, args):
     opts = dict(batch_size=cfg.get("batch_size", 128), weights=cfg.get("weights"), clip=cfg.get("clip"))
 
     def build(conditioning):
-        return PolicyKoopman(system.n, system.p, cfg.get("dz", 10), hidden=cfg.get("hidden", (32,)),
+        return PolicyKoopman(system.n, system.p, args.dz or cfg.get("dz", 10), hidden=cfg.get("hidden", (32,)),
                              conditioning=conditioning, small_init=cfg.get("small_init", False),
                              theta_scale=getattr(system, "theta_scale", None))
     return X, T, build, opts
@@ -105,6 +105,8 @@ def main():
     parser.add_argument("--n-traj", type=int, default=None,
                         help="training trajectories (default 20000 for the paper setup, else as in train.py)")
     parser.add_argument("--system", default="cartpole")
+    parser.add_argument("--dz", type=int, default=None,
+                        help="latent dimension for both variants (default as in train.py)")
     parser.add_argument("--test-params", choices=["paper", "region"], default=None,
                         help="paper: the 30 box parameters of the paper runs (cartpole only); "
                              "region: 30 fresh parameters from the deployment region (default for other systems)")

@@ -180,11 +180,13 @@ def ablation_section(runs):
             lines.append(f"| {i} | {np.mean(c):.3f} +- {np.std(c):.3f} | "
                          f"{fmt(np.mean(u) if u else None, 3)} +- {fmt(np.std(u) if u else None, 3)} |")
         lines.append("")
-    files = sorted(glob.glob(os.path.join(runs, "ablation_dictionary", "**", "results.json"), recursive=True))
+    files = sorted(f for d in ("ablation_dictionary", "ablation_dz")
+                   for f in glob.glob(os.path.join(runs, d, "**", "results.json"), recursive=True))
     groups = defaultdict(lambda: {"conditioned": [], "fixed_dictionary": []})
     for f in files:
         r = json.load(open(f))
-        key = (r.get("system", "cartpole"), r["config"].get("test_params") or "paper")
+        key = (r.get("system", "cartpole"), r["config"].get("test_params") or "paper",
+               r["config"].get("dz") or ("-" if r["config"].get("test_params") in (None, "paper") else 10))
         for v in groups[key]:
             groups[key][v] += r[v]
     if groups:
@@ -192,16 +194,16 @@ def ablation_section(runs):
                   "Mean over test parameters of the per-parameter mean error (averaged over seeds). "
                   "'paper' = the 30 cartpole parameters of the paper runs, 'region' = 30 fresh "
                   "parameters from the deployment region.", "",
-                  "| system | test parameters | seeds | conditioned (%) | fixed dictionary (%) | "
-                  "median paired difference | conditioned lower |", "|---|---|---|---|---|---|---|"]
-        for (system, tp), recs in sorted(groups.items()):
+                  "| system | test parameters | latent dim | seeds | conditioned (%) | fixed dictionary (%) | "
+                  "median paired difference | conditioned lower |", "|---|---|---|---|---|---|---|---|"]
+        for (system, tp, dz), recs in sorted(groups.items(), key=lambda kv: (kv[0][0], kv[0][1], str(kv[0][2]).zfill(3))):
             n_alpha = 1 + max(x["alpha_idx"] for x in recs["conditioned"])
             per = {v: np.array([np.mean([x["mean_err"] for x in recs[v] if x["alpha_idx"] == i])
                                 for i in range(n_alpha)]) for v in recs}
             seeds = len({x["seed"] for x in recs["conditioned"]})
             diff = per["fixed_dictionary"] - per["conditioned"]
             wins = int(np.sum(diff > 0))
-            lines.append(f"| {system} | {tp} | {seeds} | {per['conditioned'].mean():.3f} | "
+            lines.append(f"| {system} | {tp} | {dz} | {seeds} | {per['conditioned'].mean():.3f} | "
                          f"{per['fixed_dictionary'].mean():.3f} | {np.median(diff):+.3f} | {wins} of {n_alpha} |")
         lines.append("")
     return lines
