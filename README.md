@@ -14,6 +14,9 @@ model is trained on parameters from C. The same model can then be used to pick a
 feedback parameter once, at the initial state, by minimizing a cost of the predicted
 rollout inside C.
 
+## Preprint
+https://github.com/kirangkrishnan/Parameterized-Koopman/blob/main/Krishnan_Deka_2026_preprint.pdf
+
 ## Setup
 
 ```
