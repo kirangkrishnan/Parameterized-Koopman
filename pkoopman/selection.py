@@ -88,22 +88,41 @@ def hull_constraint(region):
     return LinearConstraint(A, np.full(len(b), -np.inf), -b)
 
 
-def surrogate_cost(net, system, x0, theta, objective, s):
-    Z = net.latent_rollout(x0, theta, s["horizon"])
-    X = net.decode(Z, theta) if objective == "x" or "action" in s else None
-    if objective == "z":
-        cost = s["q_z"] * np.sum(Z ** 2)
-    else:
-        if "x_weights" in s:
-            # diagonal weighting of the decoded state, summed coordinate by coordinate
-            cost = s["q_x"] * sum(w * np.sum(X[:, i] ** 2) for i, w in enumerate(s["x_weights"]))
-        else:
-            cost = s["q_x"] * np.sum(X ** 2)
+def state_cost(X, s):
+    """Weighted sum of squared states along a trajectory X (H, n)."""
+    if "x_weights" in s:
+        # diagonal weighting, summed coordinate by coordinate
+        return s["q_x"] * sum(w * np.sum(X[:, i] ** 2) for i, w in enumerate(s["x_weights"]))
+    return s["q_x"] * np.sum(X ** 2)
+
+
+def add_extra_terms(cost, X, system, x0, theta, s):
+    """Terms shared by every objective: gain size and, for MuJoCo, the input penalties."""
     cost = cost + s["r_theta"] * np.sum(theta ** 2)
     if "action" in s:
         for term in action_penalties(X, system, x0, theta, s["action"]):
             cost = cost + term
     return cost
+
+
+def surrogate_cost(net, system, x0, theta, objective, s):
+    Z = net.latent_rollout(x0, theta, s["horizon"])
+    X = net.decode(Z, theta) if objective == "x" or "action" in s else None
+    cost = s["q_z"] * np.sum(Z ** 2) if objective == "z" else state_cost(X, s)
+    return add_extra_terms(cost, X, system, x0, theta, s)
+
+
+# cost assigned to a candidate whose true closed loop fails (diverges or terminates)
+FAILED_ROLLOUT_COST = 1e6
+
+
+def simulator_cost(system, x0, theta, s):
+    """The decoded objective evaluated on the true closed loop instead of the model."""
+    traj = system.simulate(x0, theta, s["horizon"])
+    if traj is None or not np.all(np.isfinite(traj)):
+        return FAILED_ROLLOUT_COST
+    X = traj[1:]
+    return add_extra_terms(state_cost(X, s), X, system, x0, theta, s)
 
 
 def action_penalties(X, system, x0, theta, a):
@@ -116,20 +135,33 @@ def action_penalties(X, system, x0, theta, a):
     return [a["r_u"] * np.sum(u ** 2), 1000.0 * np.sum(over ** 2), 20.0 * u0 ** 2, gain_cost]
 
 
+def _minimize(cost, region, system, s):
+    theta0 = np.mean(region, axis=0)
+    bounds = list(zip(system.theta_low, system.theta_high))
+    t0 = time.perf_counter()
+    res = minimize(cost, theta0, method="SLSQP", bounds=bounds,
+                   constraints=[hull_constraint(region)],
+                   options={"ftol": s["ftol"], "maxiter": s["maxiter"]})
+    t_select = time.perf_counter() - t0
+    theta = res.x if res.success else theta0
+    return theta, dict(success=bool(res.success), nit=int(res.nit), nfev=int(res.nfev),
+                       cost=float(res.fun), t_select=t_select)
+
+
 def select_theta(model, region, x0, system, objective="x", settings=None):
     """Solve the selection problem once. Returns (theta, info). If SLSQP reports
     failure the mean of the verified samples is returned, as in the paper runs."""
     s = settings or SETTINGS[system.name]
     net = NumpyModel(model)
     x0 = np.asarray(x0, dtype=np.float64)
-    theta0 = np.mean(region, axis=0)
-    bounds = list(zip(system.theta_low, system.theta_high))
+    return _minimize(lambda th: surrogate_cost(net, system, x0, th, objective, s), region, system, s)
 
-    t0 = time.perf_counter()
-    res = minimize(lambda th: surrogate_cost(net, system, x0, th, objective, s), theta0,
-                   method="SLSQP", bounds=bounds, constraints=[hull_constraint(region)],
-                   options={"ftol": s["ftol"], "maxiter": s["maxiter"]})
-    t_select = time.perf_counter() - t0
-    theta = res.x if res.success else theta0
-    return theta, dict(success=bool(res.success), nit=int(res.nit), nfev=int(res.nfev),
-                       cost=float(res.fun), t_select=t_select)
+
+def select_theta_on_simulator(region, x0, system, settings=None):
+    """Reference for the surrogate: the same problem (decoded objective, horizon,
+    hull constraint, optimizer settings) with every cost evaluation done by
+    simulating the true closed loop. This is the theta^opt of the paper restricted
+    to C, up to the local nature of SLSQP."""
+    s = settings or SETTINGS[system.name]
+    x0 = np.asarray(x0, dtype=np.float64)
+    return _minimize(lambda th: simulator_cost(system, x0, th, s), region, system, s)

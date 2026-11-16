@@ -9,12 +9,15 @@ is mapped linearly onto a box of physical gains, as for the analytic cartpole.
 import numpy as np
 import gymnasium as gym
 
-# Gain box used by every downstream (selection and control) run of the inverted
-# pendulum. Note: the IP model itself was trained with the narrower box
-# [-1, -3, -25, -4] .. [1, 1, -5, -0.5]; the control runs in the paper used the
-# box below, so we keep it here.
-IP_GAIN_LOW = np.array([-2.0, -5.0, -40.0, -10.0])
-IP_GAIN_HIGH = np.array([2.0, 2.0, -5.0, -1.0])
+# Two gain boxes for the inverted pendulum. The IP model was trained (and its
+# region built) with the "training" box. The control runs behind Table III used
+# the wider "control" box, which is kept as the default so that those runs are
+# reproduced; the newer experiment scripts use the training box.
+IP_GAIN_BOXES = {
+    "training": (np.array([-1.0, -3.0, -25.0, -4.0]), np.array([1.0, 1.0, -5.0, -0.5])),
+    "control": (np.array([-2.0, -5.0, -40.0, -10.0]), np.array([2.0, 2.0, -5.0, -1.0])),
+}
+IP_GAIN_LOW, IP_GAIN_HIGH = IP_GAIN_BOXES["control"]
 
 # Double pendulum: the box was derived from a scaled LQR gain when the IDP model
 # was trained (gain_low_idp.npy / gain_high_idp.npy in our first version of the code).
@@ -33,8 +36,11 @@ class MujocoSystem:
     gain_low = gain_high = None
     x0_low = x0_high = None
 
-    def __init__(self):
-        self.env = gym.make(self.env_id)
+    def __init__(self, max_episode_steps=None):
+        # Gymnasium stops these environments after 1000 steps by default; pass a
+        # larger value for longer episodes
+        kwargs = {} if max_episode_steps is None else dict(max_episode_steps=max_episode_steps)
+        self.env = gym.make(self.env_id, **kwargs)
         self.env.reset(seed=0)
         self.dt = float(self.env.unwrapped.dt)
         self.u_max = float(self.env.action_space.high[0])
@@ -108,6 +114,11 @@ class InvertedPendulum(MujocoSystem):
     gain_low, gain_high = IP_GAIN_LOW, IP_GAIN_HIGH
     x0_low = -np.array([0.5, 0.5, 0.2, 0.8])
     x0_high = np.array([0.5, 0.5, 0.2, 0.8])
+
+    def __init__(self, gain_box="control", **kwargs):
+        super().__init__(**kwargs)
+        self.gain_box = gain_box
+        self.gain_low, self.gain_high = IP_GAIN_BOXES[gain_box]
 
     def features(self, x):
         return [x[..., 0], x[..., 1], np.sin(x[..., 2]), x[..., 3]]
