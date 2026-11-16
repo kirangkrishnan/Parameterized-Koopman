@@ -1,0 +1,12 @@
+{
+  "system": "vdp",
+  "method": "nmpc",
+  "seed": 99,
+  "steps": 400,
+  "dt": 0.05,
+  "t_tot": 0.5290734420268564,
+  "t_episode": 0.6865316470066318,
+  "t_solve": 0.5290734420268564,
+  "stabilized": true,
+  "final_norm": 8.875046869208984e-09
+}

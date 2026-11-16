@@ -1,0 +1,12 @@
+{
+  "system": "vdp",
+  "method": "kmpc_deep",
+  "seed": 42,
+  "steps": 400,
+  "dt": 0.05,
+  "t_tot": 8.967930682993028,
+  "t_episode": 8.967930682993028,
+  "t_solve": 8.519620410137577,
+  "stabilized": true,
+  "final_norm": 0.0015842948969403909
+}

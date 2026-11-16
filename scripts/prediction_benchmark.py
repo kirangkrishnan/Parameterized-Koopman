@@ -1,10 +1,10 @@
 """Closed-loop prediction benchmark (Table II and Fig. 7 of the paper).
 
-By default: 30 parameters drawn from the samples of the verified region C (the
-same samples the final model was trained on), 20 initial conditions each.
---thetas fresh draws new parameters uniformly from the hull of C with an unused
-seed, and --thetas box draws them uniformly from the whole box Theta, which also
-tests every method outside the region chosen for our model.
+By default (--thetas fresh, as in the paper): 30 new parameters drawn uniformly
+from the hull of the verified region C with a seed not used in training, 20
+initial conditions each. --thetas region reuses samples of C that the final model
+was trained on, and --thetas box draws parameters from the whole box Theta, which
+also tests every method outside the region chosen for our model.
 Every method predicts 20 steps from x0; the table reports the worst-case error
 over the first 12 steps. Methods:
   Ours          policy-conditioned model from checkpoints/<system>.pt
@@ -14,14 +14,11 @@ over the first 12 steps. Methods:
   EDMD, Kernel-EDMD  fitted at the centroid of C, ignore theta
 
     python scripts/prediction_benchmark.py vdp
+    python scripts/prediction_benchmark.py mujoco_idp
     python scripts/prediction_benchmark.py cartpole --retrain
-    python scripts/prediction_benchmark.py manipulator --thetas fresh
-    python scripts/prediction_benchmark.py mujoco_ip --thetas fresh --retrain
 
 By default the PKNN and Deep Koopman weights from checkpoints/baselines/ are
-used. --retrain trains them again with the same data, seeds and settings. The
-MuJoCo systems have no stored baselines: without --retrain only Ours, EDMD and
-Kernel-EDMD are run there.
+used. --retrain trains them again with the same data, seeds and settings.
 """
 import argparse
 import json
@@ -49,7 +46,6 @@ from pkoopman.systems import experiment_system, get_system
 SETTINGS = {
     "vdp": dict(x0_scale=0.5, n_train=4000, degree=3, trig=()),
     "slow_manifold": dict(x0_scale=0.5, n_train=4000, degree=3, trig=()),
-    "slow_manifold_u2": dict(x0_scale=0.5, n_train=4000, degree=3, trig=()),
     "manipulator": dict(x0_scale=0.3, n_train=5000, degree=2, trig=(2, 3)),
     "cartpole": dict(x0_scale=0.2, n_train=10000, degree=2, trig=(2, 3)),
     # MuJoCo: test initial conditions in the box used to build the region
@@ -232,7 +228,7 @@ def main():
     parser.add_argument("system", choices=list(SETTINGS))
     parser.add_argument("--retrain", action="store_true",
                         help="train PKNN and Deep Koopman again instead of loading checkpoints/baselines")
-    parser.add_argument("--thetas", choices=["region", "fresh", "box"], default="region",
+    parser.add_argument("--thetas", choices=["region", "fresh", "box"], default="fresh",
                         help="where the test parameters come from (see the top of this file)")
     parser.add_argument("--n-theta", type=int, default=N_THETA)
     parser.add_argument("--n-ic", type=int, default=N_IC)

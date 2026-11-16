@@ -15,6 +15,6 @@ SEEDS=(0 8 17 42 99)
 SEED=${SEEDS[$CHUNK]}
 case $1 in
   retraining) python scripts/ablation_retraining.py --seeds "$SEED" ;;
-  dictionary) python scripts/ablation_dictionary.py --seeds "$SEED" --out "runs/ablation_dictionary/seed_$SEED" ;;
+  dictionary) python scripts/ablation_dictionary.py --seeds "$SEED" --out "runs/ablation_dictionary/cartpole_region/seed_$SEED" ;;
   *) echo "usage: $0 retraining|dictionary"; exit 1 ;;
 esac

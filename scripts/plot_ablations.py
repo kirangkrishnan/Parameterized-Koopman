@@ -2,7 +2,7 @@
 ablation_retraining.py and ablation_dictionary.py.
 
     python scripts/plot_ablations.py
-    python scripts/plot_ablations.py --retraining runs/ablation_retraining --dictionary runs/ablation_dictionary/results.json
+    python scripts/plot_ablations.py --retraining runs/ablation_retraining --dictionary runs/ablation_dictionary/cartpole_region
 
 Error bars are one standard deviation over the training seeds. All test
 parameters are shown.
@@ -86,7 +86,13 @@ def plot_retraining(paths, out):
 
 
 def plot_dictionary(path, out):
-    res = json.load(open(path))
+    """path is one results.json or a folder with seed_*/results.json (one per seed)."""
+    files = [path] if path.endswith(".json") else sorted(glob.glob(os.path.join(path, "seed_*", "results.json")))
+    runs = [json.load(open(f)) for f in files]
+    res = dict(runs[0])
+    for v in ("conditioned", "fixed_dictionary"):
+        res[v] = [r for run in runs for r in run[v]]
+    res["latent"] = next(run["latent"] for run in runs if "latent" in run)
     n_alpha = len(res["alphas"])
     cond = by_alpha(res["conditioned"], n_alpha)
     fixed = by_alpha(res["fixed_dictionary"], n_alpha)
@@ -100,9 +106,12 @@ def plot_dictionary(path, out):
                  ("Conditioned dictionary $\\phi_\\theta$", "Fixed dictionary $\\phi$"), log=True)
     ax.set_xticklabels([str(i) for i in range(n_alpha)])
     ax.set_xlim(-0.6, n_alpha - 0.4)
-    ax.axvline(res["n_anchors"] - 0.5, color="0.6", lw=0.5, ls="--")
-    ax.set_xlabel(f"Index $i$ of the test parameter $\\theta^{{(i)}}$ "
-                  f"(0-{res['n_anchors'] - 1} hand-picked, rest Latin hypercube)")
+    if res["n_anchors"]:
+        ax.axvline(res["n_anchors"] - 0.5, color="0.6", lw=0.5, ls="--")
+        ax.set_xlabel(f"Index $i$ of the test parameter $\\theta^{{(i)}}$ "
+                      f"(0-{res['n_anchors'] - 1} hand-picked, rest Latin hypercube)")
+    else:
+        ax.set_xlabel("Index $i$ of the test parameter $\\theta^{(i)}$ (drawn from the region)")
     ax.set_ylabel("Worst-case error (%)")
     save(fig, out, "ablation_dictionary_accuracy")
 
@@ -124,7 +133,8 @@ def plot_dictionary(path, out):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--retraining", default="runs/ablation_retraining", help="directory with seed_*.json")
-    parser.add_argument("--dictionary", default="runs/ablation_dictionary/results.json")
+    parser.add_argument("--dictionary", default="runs/ablation_dictionary/cartpole_region",
+                        help="results.json, or a folder with seed_*/results.json")
     parser.add_argument("--out", default="runs/plot_ablations")
     args = parser.parse_args()
 

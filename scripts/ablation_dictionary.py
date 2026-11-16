@@ -1,22 +1,21 @@
 """Ablation B (paper Q1, Figs. 5-6): fully conditioned model versus a fixed
 dictionary phi(x), psi(z) with the same parameter-conditioned operator K(theta).
 
-Both models are trained on the same 20000 random-parameter cartpole trajectories
-with identical settings and evaluated at 30 test parameters (the five
-hand-picked ones of ablation A plus 25 Latin-hypercube points, seed 2026).
-Every parameter is reported.
+Both models are trained on the same random-parameter sweep of the system, with
+the settings of train.py (20000 trajectories for the cartpole), and tested at 30
+fresh parameters drawn uniformly from the hull built in Phases 1 and 2,
+checkpoints/<system>_region_pre.npy,
+from the verification initial conditions of the system. Every parameter is
+reported. The latent diagnostic encodes one state under every test parameter
+with the first seed's models and measures the spread of the codes in their first
+two principal components.
 
-With --system other than cartpole (or --test-params region) the same comparison
-runs on another analytic benchmark: both models are trained on that system's
-random-parameter sweep with the settings of train.py, and tested at 30 fresh
-parameters drawn uniformly from its deployment region checkpoints/<system>_region.npy,
-from the verification initial conditions of the system. The latent diagnostic encodes one state under every
-test parameter with the first seed's models and measures the spread of the codes
-in their first two principal components.
+--test-params paper reproduces the cartpole setup of the first preprint (30 box
+parameters: the five of ablation A plus 25 Latin-hypercube points).
 
     python scripts/ablation_dictionary.py
     python scripts/ablation_dictionary.py --load runs/ablation_dictionary/checkpoints   # evaluate only
-    python scripts/ablation_dictionary.py --system slow_manifold_u2 --seeds 0
+    python scripts/ablation_dictionary.py --system slow_manifold --seeds 0
 
 Writes runs/ablation_dictionary/results.json and the model checkpoints.
 """
@@ -50,7 +49,8 @@ def test_alphas(n_lhs=25, seed=2026):
 
 
 def region_alphas(name, n=30, seed=2026):
-    region = np.load(os.path.join(ROOT, "checkpoints", f"{name}_region.npy"))
+    # the hull before the final check (Phases 1 and 2), as in the paper
+    region = np.load(os.path.join(ROOT, "checkpoints", f"{name}_region_pre.npy"))
     return sample_in_hull(Delaunay(region), region, n, np.random.default_rng(seed))
 
 
@@ -116,7 +116,7 @@ def main():
 
     os.makedirs(os.path.join(args.out, "checkpoints"), exist_ok=True)
     if args.test_params is None:
-        args.test_params = "paper" if args.system == "cartpole" else "region"
+        args.test_params = "region"
     args.paper_setup = args.system == "cartpole" and args.test_params == "paper"
     if args.paper_setup:
         system = get_system("cartpole")

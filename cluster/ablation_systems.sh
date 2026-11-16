@@ -9,7 +9,7 @@
 #SBATCH --output=logs/%x_%A_%a.out
 # Ablation B on another benchmark, one seed per array task, test parameters
 # from the deployment region:
-#   sbatch --array=0-4 cluster/ablation_systems.sh slow_manifold_u2
+#   sbatch --array=0-4 cluster/ablation_systems.sh slow_manifold
 source cluster/env.sh
 SEEDS=(0 8 17 42 99)
 SEED=${SEEDS[$CHUNK]}

@@ -1,0 +1,12 @@
+{
+  "system": "slow_manifold",
+  "method": "nmpc",
+  "seed": 99,
+  "steps": 400,
+  "dt": 0.05,
+  "t_tot": 0.41119699194678105,
+  "t_episode": 0.5419167950021802,
+  "t_solve": 0.41119699194678105,
+  "stabilized": true,
+  "final_norm": 2.3309158575368855e-09
+}

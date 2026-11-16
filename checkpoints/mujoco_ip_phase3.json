@@ -1,0 +1,33 @@
+{
+ "accepted": true,
+ "threshold": 15.0,
+ "steps": 12,
+ "acceptance": 0.95,
+ "seed": 2030,
+ "history": [
+  {
+   "iteration": 0,
+   "pass_rate": 0.424,
+   "n_vertices": 10000,
+   "median_error": 17.323587841959608
+  },
+  {
+   "iteration": 1,
+   "pass_rate": 0.8926666666666667,
+   "n_vertices": 636,
+   "median_error": 11.127627163611628
+  },
+  {
+   "iteration": 2,
+   "pass_rate": 0.94,
+   "n_vertices": 1339,
+   "median_error": 10.723442838107951
+  },
+  {
+   "iteration": 3,
+   "pass_rate": 0.9506666666666667,
+   "n_vertices": 1410,
+   "median_error": 10.449513498281107
+  }
+ ]
+}

@@ -1,0 +1,12 @@
+{
+  "system": "vdp",
+  "method": "kmpc_edmd",
+  "seed": 0,
+  "steps": 400,
+  "dt": 0.05,
+  "t_tot": 0.5944909329991788,
+  "t_episode": 0.5944909329991788,
+  "t_solve": 0.451783082113252,
+  "stabilized": true,
+  "final_norm": 4.2781661465272946e-10
+}

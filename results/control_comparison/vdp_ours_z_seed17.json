@@ -1,0 +1,14 @@
+{
+  "system": "vdp",
+  "method": "ours_z",
+  "seed": 17,
+  "steps": 400,
+  "dt": 0.05,
+  "t_select": 0.05876997199084144,
+  "slsqp_success": true,
+  "t_tot": 0.3517604699882213,
+  "t_episode": 0.29299049799737986,
+  "t_solve": 0.0,
+  "stabilized": true,
+  "final_norm": 0.010070790995948448
+}

@@ -1,0 +1,14 @@
+{
+  "system": "cartpole",
+  "method": "ours_x",
+  "seed": 8,
+  "steps": 400,
+  "dt": 0.05,
+  "t_select": 0.045013032999122515,
+  "slsqp_success": true,
+  "t_tot": 0.22590873199806083,
+  "t_episode": 0.18089569899893831,
+  "t_solve": 0.0,
+  "stabilized": true,
+  "final_norm": 2.5991647373604185e-05
+}

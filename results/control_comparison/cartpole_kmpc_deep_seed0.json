@@ -1,0 +1,12 @@
+{
+  "system": "cartpole",
+  "method": "kmpc_deep",
+  "seed": 0,
+  "steps": 400,
+  "dt": 0.05,
+  "t_tot": 11.49044290400343,
+  "t_episode": 11.49044290400343,
+  "t_solve": 11.047346727908007,
+  "stabilized": true,
+  "final_norm": 0.053777221427193746
+}

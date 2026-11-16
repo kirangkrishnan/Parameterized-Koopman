@@ -1,4 +1,4 @@
-"""Closed-loop control comparison (Q3, Table III, Fig. 8).
+"""Closed-loop control comparison (Q3, Table III and Fig. 8 of the paper).
 
 Runs one method on one system from the fixed initial state of Table III and saves
 the trajectory, the applied inputs and the timings to
@@ -11,9 +11,10 @@ Methods: ours_z, ours_x (one-shot selection, then fixed feedback), nmpc,
 kmpc_edmd, kmpc_deep. All pipelines are deterministic; the seed only names the
 output (the paper averages wall-clock times over seeds 8, 17, 42, 0, 99).
 
-t_tot follows the rule used for Table III: Ours = wall time of the closed-loop
-episode (the selection time is stored separately as t_select), NMPC = sum of
-the optimizer calls, K-MPC = wall time of the whole episode.
+t_tot follows the rule used for Table III: Ours = one-time selection plus the
+wall time of the closed-loop episode (both are also stored separately as t_select
+and t_episode), NMPC = sum of the optimizer calls, K-MPC = wall time of the whole
+episode. Ours selects inside the verified region checkpoints/<system>_region.npy.
 """
 import argparse
 import json
@@ -29,7 +30,7 @@ from scipy.integrate import solve_ivp
 
 from pkoopman.model import load_model
 from pkoopman.selection import select_theta
-from pkoopman.systems import get_system
+from pkoopman.systems import experiment_system as get_system
 
 # initial state, episode length in seconds, input bound of the plant
 EPISODES = {
@@ -129,7 +130,8 @@ def main():
         traj, inputs = run_episode(system, x0, steps, lambda x: system.feedback(x, theta),
                                    ep.get("u_max"), feedback_inside=True)
         t_episode = time.perf_counter() - t0
-        meta.update(t_select=info["t_select"], slsqp_success=info["success"], t_tot=t_episode)
+        meta.update(t_select=info["t_select"], slsqp_success=info["success"],
+                    t_tot=info["t_select"] + t_episode)
         extra["theta"] = theta
         t_solve = 0.0
     else:

@@ -1,0 +1,99 @@
+{
+ "accepted": true,
+ "threshold": 15.0,
+ "steps": 12,
+ "acceptance": 0.95,
+ "seed": 2030,
+ "history": [
+  {
+   "iteration": 0,
+   "pass_rate": 0.07333333333333333,
+   "n_vertices": 10000,
+   "median_error": 22.111109201679746
+  },
+  {
+   "iteration": 1,
+   "pass_rate": 0.124,
+   "n_vertices": 110,
+   "median_error": 19.896512749290494
+  },
+  {
+   "iteration": 2,
+   "pass_rate": 0.11866666666666667,
+   "n_vertices": 186,
+   "median_error": 21.570229948405952
+  },
+  {
+   "iteration": 3,
+   "pass_rate": 0.22,
+   "n_vertices": 178,
+   "median_error": 18.918190515625838
+  },
+  {
+   "iteration": 4,
+   "pass_rate": 0.56,
+   "n_vertices": 330,
+   "median_error": 14.768164663075078
+  },
+  {
+   "iteration": 5,
+   "pass_rate": 0.58,
+   "n_vertices": 840,
+   "median_error": 14.781635438640285
+  },
+  {
+   "iteration": 6,
+   "pass_rate": 0.5966666666666667,
+   "n_vertices": 870,
+   "median_error": 14.790701149088871
+  },
+  {
+   "iteration": 7,
+   "pass_rate": 0.674,
+   "n_vertices": 895,
+   "median_error": 14.667873849921943
+  },
+  {
+   "iteration": 8,
+   "pass_rate": 0.742,
+   "n_vertices": 1011,
+   "median_error": 14.624984861651264
+  },
+  {
+   "iteration": 9,
+   "pass_rate": 0.794,
+   "n_vertices": 1113,
+   "median_error": 14.580856102426814
+  },
+  {
+   "iteration": 10,
+   "pass_rate": 0.854,
+   "n_vertices": 1191,
+   "median_error": 14.508720972312688
+  },
+  {
+   "iteration": 11,
+   "pass_rate": 0.9006666666666666,
+   "n_vertices": 1281,
+   "median_error": 14.472810626987751
+  },
+  {
+   "iteration": 12,
+   "pass_rate": 0.904,
+   "n_vertices": 1351,
+   "median_error": 14.47714498442133
+  },
+  {
+   "iteration": 13,
+   "pass_rate": 0.936,
+   "n_vertices": 1356,
+   "median_error": 14.416747087757173
+  },
+  {
+   "iteration": 14,
+   "pass_rate": 0.958,
+   "n_vertices": 1404,
+   "median_error": 14.389811602837018
+  }
+ ]
+}

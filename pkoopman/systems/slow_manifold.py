@@ -29,13 +29,3 @@ class SlowManifold(ODESystem):
 
     def is_valid(self, theta, trajectories):
         return all(tr is not None and np.abs(tr).max() <= 15.0 for tr in trajectories)
-
-
-class SlowManifoldU2(SlowManifold):
-    """Same system with the input entering the second equation,
-    x1' = mu x1, x2' = lam (x2 - x1^2) + u. This is the variant used for the
-    slow-manifold column of the prediction benchmark (Table II)."""
-    name = "slow_manifold_u2"
-
-    def f(self, x, u):
-        return [MU * x[0], LAM * (x[1] - x[0] ** 2) + u]

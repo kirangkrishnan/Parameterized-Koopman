@@ -1,0 +1,14 @@
+{
+  "system": "mujoco_ip",
+  "method": "ours_z",
+  "seed": 0,
+  "steps": 500,
+  "dt": 0.04,
+  "t_select": 0.0914231360075064,
+  "slsqp_success": true,
+  "t_tot": 0.1111016560025746,
+  "t_episode": 0.0196785199950682,
+  "t_solve": 0.0,
+  "stabilized": true,
+  "final_norm": 0.04370843757710863
+}

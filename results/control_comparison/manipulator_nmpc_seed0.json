@@ -1,0 +1,12 @@
+{
+  "system": "manipulator",
+  "method": "nmpc",
+  "seed": 0,
+  "steps": 400,
+  "dt": 0.05,
+  "t_tot": 1.8613309820066206,
+  "t_episode": 2.3033317559893476,
+  "t_solve": 1.8613309820066206,
+  "stabilized": true,
+  "final_norm": 6.160858921994022e-23
+}

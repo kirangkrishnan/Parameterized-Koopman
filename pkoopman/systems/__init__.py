@@ -1,12 +1,11 @@
 from .vdp import VanDerPol
-from .slow_manifold import SlowManifold, SlowManifoldU2
+from .slow_manifold import SlowManifold
 from .manipulator import Manipulator
 from .cartpole import Cartpole
 
 SYSTEMS = {
     "vdp": VanDerPol,
     "slow_manifold": SlowManifold,
-    "slow_manifold_u2": SlowManifoldU2,
     "manipulator": Manipulator,
     "cartpole": Cartpole,
 }

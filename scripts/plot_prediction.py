@@ -17,21 +17,24 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 METHODS = ["Ours", "PKNN", "EDMD", "Deep Koopman", "Kernel-EDMD"]
 COLORS = {"Ours": "#3a9e5c", "PKNN": "#35a9c4", "EDMD": "#7d5ba6",
           "Deep Koopman": "#e8892b", "Kernel-EDMD": "#8c6151"}
-TITLES = {"vdp": "Van der Pol", "slow_manifold": "Slow manifold (u in x1)",
-          "slow_manifold_u2": "Slow manifold", "manipulator": "Manipulator", "cartpole": "Cartpole"}
+TITLES = {"vdp": "Van der Pol", "slow_manifold": "Slow manifold",
+          "manipulator": "Manipulator", "cartpole": "Cartpole",
+          "mujoco_ip": "MuJoCo IP", "mujoco_idp": "MuJoCo IDP"}
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--systems", nargs="+", default=["vdp", "slow_manifold_u2", "manipulator", "cartpole"])
+    parser.add_argument("--systems", nargs="+", default=["vdp", "slow_manifold", "manipulator", "cartpole", "mujoco_ip", "mujoco_idp"])
     parser.add_argument("--runs", default=os.path.join(ROOT, "runs", "prediction_benchmark"))
+    parser.add_argument("--thetas", default="fresh", help="which run of prediction_benchmark.py to plot")
     parser.add_argument("--out", default=None)
     args = parser.parse_args()
 
     ncol = len(args.systems)
     fig, axes = plt.subplots(2, ncol, figsize=(2.0 * ncol, 4.2), squeeze=False)
     for j, name in enumerate(args.systems):
-        with open(os.path.join(args.runs, f"{name}.json")) as f:
+        stem = name if args.thetas == "region" else f"{name}_{args.thetas}"
+        with open(os.path.join(args.runs, f"{stem}.json")) as f:
             res = json.load(f)
         top, bottom = axes[0, j], axes[1, j]
         H = str(res["train_horizon"])

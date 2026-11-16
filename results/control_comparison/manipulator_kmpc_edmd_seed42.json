@@ -1,0 +1,12 @@
+{
+  "system": "manipulator",
+  "method": "kmpc_edmd",
+  "seed": 42,
+  "steps": 400,
+  "dt": 0.05,
+  "t_tot": 1.2048778269963805,
+  "t_episode": 1.2048778269963805,
+  "t_solve": 0.8152418669487815,
+  "stabilized": true,
+  "final_norm": 4.948449260699815e-22
+}

@@ -1,0 +1,14 @@
+{
+  "system": "slow_manifold",
+  "method": "ours_x",
+  "seed": 17,
+  "steps": 400,
+  "dt": 0.05,
+  "t_select": 0.019675963005283847,
+  "slsqp_success": true,
+  "t_tot": 0.13264844799414277,
+  "t_episode": 0.11297248498885892,
+  "t_solve": 0.0,
+  "stabilized": true,
+  "final_norm": 4.003859274426674e-09
+}

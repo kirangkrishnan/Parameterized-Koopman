@@ -1,0 +1,12 @@
+{
+  "system": "slow_manifold",
+  "method": "kmpc_deep",
+  "seed": 0,
+  "steps": 400,
+  "dt": 0.05,
+  "t_tot": 10.435236363002332,
+  "t_episode": 10.435236363002332,
+  "t_solve": 9.92772492604854,
+  "stabilized": true,
+  "final_norm": 0.0005290563541266817
+}

@@ -3,7 +3,6 @@
 Reads whatever is there, so it can be run while cluster jobs are still going:
   runs/region_check/<system>/chunk*.npz           (region_check.py)
   runs/prediction_benchmark/<system>[_mode].json  (prediction_benchmark.py)
-  runs/control_benchmark/<system>/<tag>/*.jsonl   (control_benchmark.py)
   runs/ablation_retraining/seed_*.json            (ablation_retraining.py)
   runs/ablation_dictionary/**/results.json        (ablation_dictionary.py)
 
@@ -89,58 +88,6 @@ def prediction_section(runs):
     return lines + [""]
 
 
-def control_section(runs):
-    root = os.path.join(runs, "control_benchmark")
-    groups = defaultdict(list)
-    for f in glob.glob(os.path.join(root, "*", "*", "*.jsonl")):
-        system, tag = f.split(os.sep)[-3:-1]
-        groups[(system, tag)] += [json.loads(line) for line in open(f) if line.strip()]
-    if not groups:
-        return []
-    lines = ["## Control from many initial states", "",
-             "Success = regulated to ||x_T|| below the tolerance without early termination. "
-             "Cost = integral of ||x||^2 + 0.1 ||u||^2 over the episode (successful episodes). "
-             "t_online includes the selection time of the one-shot methods.", "",
-             "| system | method | episodes | success (95% CI) | median settling (s) | mean cost | "
-             "mean effort | t_select (s) | t_online (s) |",
-             "|---|---|---|---|---|---|---|---|---|"]
-    for (system, tag) in sorted(groups):
-        recs = groups[(system, tag)]
-        n = len(recs)
-        k = sum(r["success"] for r in recs)
-        lo, hi = clopper_pearson(k, n)
-        succ = [r for r in recs if r["success"]]
-        settle = np.median([r["settling_time"] for r in succ]) if succ else None
-        cost = np.mean([r["cost"] for r in succ]) if succ else None
-        effort = np.mean([r["effort"] for r in succ]) if succ else None
-        t_sel = np.mean([r["t_select"] for r in recs])
-        t_on = [r["t_online"] for r in recs]
-        lines.append(f"| {system} | {tag} | {n} | {k / n:.2f} [{lo:.2f}, {hi:.2f}] | {fmt(settle)} | "
-                     f"{fmt(cost, 3)} | {fmt(effort, 3)} | {fmt(t_sel, 3)} | "
-                     f"{np.mean(t_on):.3f} +- {np.std(t_on):.3f} |")
-
-    # paired comparison with the simulator reference: cost of the surrogate's choice
-    # relative to the choice made on the true simulator, same initial state
-    pairs = []
-    for (system, tag) in sorted(groups):
-        if not tag.startswith("sim_opt"):
-            continue
-        ref = {r["index"]: r for r in groups[(system, tag)] if r["success"]}
-        suffix = tag[len("sim_opt"):]
-        for other in ("ours_x", "ours_z", "centroid"):
-            recs = groups.get((system, other + suffix), [])
-            ratios = [r["cost"] / ref[r["index"]]["cost"] for r in recs
-                      if r["success"] and r["index"] in ref and ref[r["index"]]["cost"] > 0]
-            if ratios:
-                pairs.append(f"| {system} | {other}{suffix} | {len(ratios)} | {np.median(ratios):.3f} | "
-                             f"{np.percentile(ratios, 90):.3f} |")
-    if pairs:
-        lines += ["", "Closed-loop cost relative to the simulator reference (sim_opt), "
-                  "paired by initial state, both successful:", "",
-                  "| system | method | pairs | median ratio | 90th percentile |", "|---|---|---|---|---|"] + pairs
-    return lines + [""]
-
-
 def phase3_section(runs):
     files = sorted(glob.glob(os.path.join(runs, "**", "*_phase3.json"), recursive=True))
     if not files:
@@ -214,7 +161,7 @@ def main():
     parser.add_argument("--runs", default=os.path.join(ROOT, "runs"))
     args = parser.parse_args()
     lines = ["# Experiment summary", ""]
-    for section in (phase3_section, region_section, prediction_section, control_section, ablation_section):
+    for section in (phase3_section, region_section, prediction_section, ablation_section):
         lines += section(args.runs)
     path = os.path.join(args.runs, "summary.md")
     os.makedirs(args.runs, exist_ok=True)

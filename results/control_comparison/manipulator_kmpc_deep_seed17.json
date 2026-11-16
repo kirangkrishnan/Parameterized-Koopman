@@ -1,0 +1,12 @@
+{
+  "system": "manipulator",
+  "method": "kmpc_deep",
+  "seed": 17,
+  "steps": 400,
+  "dt": 0.05,
+  "t_tot": 18.59107284199854,
+  "t_episode": 18.59107284199854,
+  "t_solve": 18.015052648886922,
+  "stabilized": true,
+  "final_norm": 0.0019093377814147995
+}

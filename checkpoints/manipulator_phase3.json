@@ -1,0 +1,17 @@
+{
+ "accepted": false,
+ "threshold": 15.0,
+ "steps": 12,
+ "acceptance": 0.95,
+ "x0_margin": 1.2,
+ "construction_threshold": 20.0,
+ "construction_steps": 12,
+ "history": [
+  {
+   "iteration": 0,
+   "pass_rate": 0.0,
+   "n_vertices": 5000,
+   "median_error": 17.958562956310715
+  }
+ ]
+}

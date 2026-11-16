@@ -1,0 +1,12 @@
+{
+  "system": "mujoco_ip",
+  "method": "kmpc_deep",
+  "seed": 99,
+  "steps": 500,
+  "dt": 0.04,
+  "t_tot": 15.431015822992777,
+  "t_episode": 15.431015822992777,
+  "t_solve": 14.995688488153974,
+  "stabilized": true,
+  "final_norm": 0.009022324493706225
+}

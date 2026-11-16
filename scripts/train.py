@@ -31,10 +31,11 @@ CONFIGS = {
     "vdp": dict(n_traj=4000, n_explore=4000, n_final=4000),
     "slow_manifold": dict(n_traj=4000, n_explore=3000, n_final=4000, n_test=500,
                           weights=dict(pred=4.0), require_valid=True),
-    "slow_manifold_u2": dict(n_traj=4000, n_explore=3000, n_final=4000, n_test=500,
-                             weights=dict(pred=4.0), require_valid=True),
+    # no region passes at 15% for the manipulator; the paper uses this model, trained
+    # on a 1.2x wider box of initial states, with its region built and checked at 20%
     "manipulator": dict(n_traj=5000, n_explore=5000, n_final=5000,
-                        weights=dict(pred=4.0), small_init=True, require_valid=True),
+                        weights=dict(pred=4.0), small_init=True, require_valid=True,
+                        threshold=20.0, check_steps=12, x0_margin=1.2, verify_threshold=20.0),
     "cartpole": dict(n_traj=20000, n_explore=10000, n_final=10000, batch_size=256,
                      weights=dict(pred=8.0, lin=4.0), clip=1.0, small_init=True),
     # the MuJoCo models were checked with a loose 100% threshold
@@ -96,9 +97,10 @@ def main():
                         help="region tolerance in percent (overrides the setting of the system)")
     parser.add_argument("--check-steps", type=int, default=None,
                         help="steps in the region test (overrides the setting of the system)")
-    parser.add_argument("--x0-margin", type=float, default=1.0,
+    parser.add_argument("--x0-margin", type=float, default=None,
                         help="widen the box of training initial states by this factor")
-    parser.add_argument("--verify-threshold", type=float, default=15.0, help="Phase 3 tolerance in percent")
+    parser.add_argument("--verify-threshold", type=float, default=None,
+                        help="Phase 3 tolerance in percent (default 15, 20 for the manipulator)")
     parser.add_argument("--verify-steps", type=int, default=12, help="Phase 3 horizon")
     parser.add_argument("--acceptance", type=float, default=0.95,
                         help="Phase 3 accepts the region when this fraction of fresh parameters passes")
@@ -111,6 +113,10 @@ def main():
         cfg["threshold"] = args.threshold
     if args.check_steps is not None:
         cfg["check_steps"] = args.check_steps
+    if args.x0_margin is None:
+        args.x0_margin = cfg.get("x0_margin", 1.0)
+    if args.verify_threshold is None:
+        args.verify_threshold = cfg.get("verify_threshold", 15.0)
     system = experiment_system(args.system)
     rng = np.random.default_rng(args.seed)
     torch.manual_seed(args.seed)

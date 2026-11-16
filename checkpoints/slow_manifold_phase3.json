@@ -1,0 +1,15 @@
+{
+ "accepted": true,
+ "threshold": 15.0,
+ "steps": 12,
+ "acceptance": 0.95,
+ "seed": 2030,
+ "history": [
+  {
+   "iteration": 0,
+   "pass_rate": 0.9953333333333333,
+   "n_vertices": 4000,
+   "median_error": 6.863106608973957
+  }
+ ]
+}
