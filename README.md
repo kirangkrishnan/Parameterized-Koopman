@@ -21,10 +21,6 @@ K. G. Krishnan and S. A. Deka, Policy-Conditioned Koopman Representations for
 Parameterized Closed-Loop Systems, https://arxiv.org/abs/2611.18451. Submitted to
 the IEEE Open Journal of Control Systems.
 
-The code matches the revised version of the paper, in which every region passes the
-final check with the final model, the prediction benchmark uses fresh parameters on
-all six systems, and ablation B tests 30 parameters drawn from the region.
-
 ## Setup
 
 ```
