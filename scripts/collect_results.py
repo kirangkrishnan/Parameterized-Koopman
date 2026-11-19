@@ -139,7 +139,7 @@ def ablation_section(runs):
     if groups:
         lines += ["## Ablation B (conditioned vs fixed dictionary), all test parameters", "",
                   "Mean over test parameters of the per-parameter mean error (averaged over seeds). "
-                  "'paper' = the 30 cartpole parameters of the paper runs, 'region' = 30 fresh "
+                  "'paper' = the 30 cartpole parameters of the first preprint, 'region' = 30 fresh "
                   "parameters from the deployment region.", "",
                   "| system | test parameters | latent dim | seeds | conditioned (%) | fixed dictionary (%) | "
                   "median paired difference | conditioned lower |", "|---|---|---|---|---|---|---|---|"]

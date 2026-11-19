@@ -1,8 +1,8 @@
-"""Fig. 8 style summary of the control comparison: ||x(t)|| per system (top row)
+"""Fig. 7 style summary of the control comparison: ||x(t)|| per system (top row)
 and online computation t_tot averaged over the available seeds (bottom row, log scale).
 
-  python scripts/plot_control.py
-  python scripts/plot_control.py --systems vdp cartpole --seed 8
+    python scripts/plot_control.py
+    python scripts/plot_control.py --systems vdp cartpole --seed 8
 """
 import argparse
 import json

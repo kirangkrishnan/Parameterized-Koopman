@@ -16,11 +16,13 @@ parameters from C, and C is shrunk and tested again until at least 95% of them p
 feedback parameter once, at the initial state, by minimizing a cost of the predicted
 rollout inside C.
 
-## Preprint
-https://github.com/kirangkrishnan/Parameterized-Koopman/blob/main/Krishnan_Deka_2026_preprint.pdf
+## Paper
+K. G. Krishnan and S. A. Deka, Policy-Conditioned Koopman Representations for
+Parameterized Closed-Loop Systems, https://arxiv.org/abs/2611.18451. Submitted to
+the IEEE Open Journal of Control Systems.
 
-The code of the first preprint is kept under the tag `arxiv-v1`. The main branch
-matches the revised version, in which every region passes the final check with the
+The code of the first preprint (arXiv v1) is kept under the tag `arxiv-v1`. The main
+branch matches the revised version, in which every region passes the final check with the
 final model, the prediction benchmark uses fresh parameters on all six systems, and
 ablation B tests 30 parameters drawn from the region.
 
@@ -102,7 +104,7 @@ a model that is already trained.
 
 All commands use the models in `checkpoints/` and are run from the repository root.
 
-**Table II and Fig. 7 (prediction).**
+**Table 2 and Fig. 6 (prediction).**
 
 ```
 python scripts/prediction_benchmark.py vdp
@@ -124,7 +126,7 @@ PKNN models can differ noticeably from the shipped ones, as its training is
 sensitive to floating point rounding. `scripts/region_check.py <system>` estimates
 the pass rate of the region on an independent draw of 1500 parameters.
 
-**Figs. 4-6 (ablations).**
+**Figs. 4 and 5 (ablations).**
 
 ```
 python scripts/ablation_retraining.py --seeds 8 17 42 0 99
@@ -142,7 +144,7 @@ drawn from the region, and the script also computes the latent diagnostic. The
 paper reports the cartpole and, in the text, `vdp`, `slow_manifold` and
 `manipulator`. Both scripts take hours per seed; `--seeds` splits the work.
 
-**Table III and Fig. 8 (one-shot selection).**
+**Table 3 and Fig. 7 (one-shot selection).**
 
 ```
 python scripts/control_comparison.py --system vdp --method ours_z
@@ -178,8 +180,9 @@ Logs go to `logs/`, results to `runs/`.
 
 ```
 @article{krishnan2026policy,
-  title  = {Policy-Conditioned Koopman Representations for Parameterized Closed-Loop Systems},
-  author = {Krishnan, Kiran G. and Deka, Shankar A.},
-  year   = {2026}
+  title   = {Policy-Conditioned Koopman Representations for Parameterized Closed-Loop Systems},
+  author  = {Krishnan, Kiran G. and Deka, Shankar A.},
+  journal = {arXiv preprint arXiv:2611.18451},
+  year    = {2026}
 }
 ```

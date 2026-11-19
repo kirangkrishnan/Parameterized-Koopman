@@ -1,17 +1,13 @@
-"""Ablation B (paper Q1, Figs. 5-6): fully conditioned model versus a fixed
-dictionary phi(x), psi(z) with the same parameter-conditioned operator K(theta).
+"""Ablation B (Fig. 5): full conditioning versus a fixed dictionary phi(x), psi(z)
+with the same parameter-conditioned operator K(theta).
 
-Both models are trained on the same random-parameter sweep of the system, with
-the settings of train.py (20000 trajectories for the cartpole), and tested at 30
-fresh parameters drawn uniformly from the hull built in Phases 1 and 2,
-checkpoints/<system>_region_pre.npy,
-from the verification initial conditions of the system. Every parameter is
-reported. The latent diagnostic encodes one state under every test parameter
-with the first seed's models and measures the spread of the codes in their first
-two principal components.
+Both models are trained on the same random-parameter data, with the settings of
+train.py, and tested at 30 parameters drawn from the hull built in Phases 1 and 2
+(checkpoints/<system>_region_pre.npy). The script also stores a latent diagnostic:
+one state is encoded under every test parameter and the spread of the codes is
+measured in their first two principal components.
 
---test-params paper reproduces the cartpole setup of the first preprint (30 box
-parameters: the five of ablation A plus 25 Latin-hypercube points).
+--test-params paper gives the 30 box parameters of the first preprint.
 
     python scripts/ablation_dictionary.py
     python scripts/ablation_dictionary.py --load runs/ablation_dictionary/checkpoints   # evaluate only
@@ -49,14 +45,14 @@ def test_alphas(n_lhs=25, seed=2026):
 
 
 def region_alphas(name, n=30, seed=2026):
-    # the hull before the final check (Phases 1 and 2), as in the paper
+    # the hull before the final check (Phases 1 and 2)
     region = np.load(os.path.join(ROOT, "checkpoints", f"{name}_region_pre.npy"))
     return sample_in_hull(Delaunay(region), region, n, np.random.default_rng(seed))
 
 
 def generic_setup(system, seed, args):
     """Data, model constructor and training options for a system other than the
-    paper's cartpole ablation, taken from the settings in train.py."""
+    cartpole, taken from the settings in train.py."""
     cfg = train_script.CONFIGS[system.name]
     X, T = train_script.make_dataset(system, np.random.default_rng(seed),
                                      system.sample_theta(np.random.default_rng(seed + 1), args.n_traj or cfg["n_traj"]))
@@ -77,7 +73,7 @@ def train_pair(seed, args, system):
     else:
         X, T, build, opts = generic_setup(system, seed, args)
     models = {}
-    # each model gets its own torch seed, as in the paper runs
+    # each model gets its own torch seed
     for name, conditioning, offset in [("conditioned", "full", 100000), ("fixed_dictionary", "operator", 200000)]:
         print(f"seed {seed}: training {name} model on {len(X)} trajectories", flush=True)
         torch.manual_seed(seed + offset)
@@ -108,7 +104,7 @@ def main():
     parser.add_argument("--dz", type=int, default=None,
                         help="latent dimension for both variants (default as in train.py)")
     parser.add_argument("--test-params", choices=["paper", "region"], default=None,
-                        help="paper: the 30 box parameters of the paper runs (cartpole only); "
+                        help="paper: the 30 box parameters of the first preprint (cartpole only); "
                              "region: 30 fresh parameters from the deployment region (default for other systems)")
     parser.add_argument("--load", default=None, help="directory with <variant>_seed_<seed>.pt, skips training")
     parser.add_argument("--out", default="runs/ablation_dictionary")

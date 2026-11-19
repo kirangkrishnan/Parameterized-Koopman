@@ -1,8 +1,8 @@
 """EDMD with a monomial dictionary and Kernel-EDMD with Gaussian RBF features.
 
-Both are fitted by ridge regression on trajectories generated at one fixed theta
-(the centroid of the verified region in the benchmark) and ignore theta when
-predicting. Column-vector convention psi_{k+1} = K psi_k.
+Both are fitted by ridge regression on trajectories at one fixed theta (the centroid
+of the verified region) and ignore theta when predicting. Column vectors,
+psi_{k+1} = K psi_k.
 """
 from itertools import combinations_with_replacement
 

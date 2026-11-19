@@ -1,24 +1,22 @@
-"""Closed-loop prediction benchmark (Table II and Fig. 7 of the paper).
+"""Closed-loop prediction benchmark (Table 2 and Fig. 6).
 
-By default (--thetas fresh, as in the paper): 30 new parameters drawn uniformly
-from the hull of the verified region C with a seed not used in training, 20
-initial conditions each. --thetas region reuses samples of C that the final model
-was trained on, and --thetas box draws parameters from the whole box Theta, which
-also tests every method outside the region chosen for our model.
-Every method predicts 20 steps from x0; the table reports the worst-case error
-over the first 12 steps. Methods:
-  Ours          policy-conditioned model from checkpoints/<system>.pt
-  PKNN          Guo et al., trained on random theta from the box, pure lifted rollout
-  PKNN (re-lift) same model, state re-lifted after every step (not in the table)
-  Deep Koopman  one fixed K, trained on the same data, ignores theta
+Each system is tested on 30 parameters drawn from the hull of its verified region C,
+with a seed not used in training, and 20 initial conditions per parameter. Every
+method predicts 20 steps from x0, and Table 2 uses the worst-case error over the
+first 12. With --thetas region the test parameters are samples of C that the final
+model was trained on, and with --thetas box they come from the whole box Theta.
+
+Methods:
+  Ours               policy-conditioned model from checkpoints/<system>.pt
+  PKNN               Guo et al., trained on random theta from the box, lifted rollout
+  PKNN (re-lift)     same model, state re-lifted after every step (not in the paper)
+  Deep Koopman       one fixed K trained on the same data, ignores theta
   EDMD, Kernel-EDMD  fitted at the centroid of C, ignore theta
 
     python scripts/prediction_benchmark.py vdp
-    python scripts/prediction_benchmark.py mujoco_idp
     python scripts/prediction_benchmark.py cartpole --retrain
 
-By default the PKNN and Deep Koopman weights from checkpoints/baselines/ are
-used. --retrain trains them again with the same data, seeds and settings.
+PKNN and Deep Koopman are loaded from checkpoints/baselines/ unless --retrain is given.
 """
 import argparse
 import json
@@ -53,9 +51,9 @@ SETTINGS = {
     "mujoco_idp": dict(x0_scale=np.array([0.15, 0.15, 0.06, 0.2, 0.06, 0.2]), n_train=10000,
                        degree=2, trig=(2, 4)),
 }
-N_THETA, N_IC = 30, 20          # paper values; --n-theta and --n-ic change them
-TRAIN_HORIZON = 12      # baseline training rollout, and the horizon of Table II
-MAX_STEPS = 20          # Fig. 7 extends the rollout to k = 20
+N_THETA, N_IC = 30, 20  # change with --n-theta and --n-ic
+TRAIN_HORIZON = 12      # baseline training rollout, and the horizon of Table 2
+MAX_STEPS = 20          # Fig. 6 shows the error up to k = 20
 REPORT_STEPS = (1, 3, 6, 9, 12, 15, 20)
 METHODS = ["Ours", "PKNN", "PKNN (re-lift)", "Deep Koopman", "EDMD", "Kernel-EDMD"]
 
@@ -81,8 +79,8 @@ def simulate(system, x0, theta, steps):
 
 
 def test_set(name, system, x0_scale, mode="region", n_theta=N_THETA, n_ic=N_IC, ckpt=None):
-    """Test parameters and initial conditions. mode "region" draws them exactly as
-    in the paper runs; "fresh" and "box" use a seed that training never saw."""
+    """Test parameters and initial conditions. "region" picks samples of the region
+    itself; "fresh" and "box" use a seed that training never saw."""
     region = np.load(os.path.join(ckpt or os.path.join(ROOT, "checkpoints"), f"{name}_region.npy"))
     if mode == "region":
         thetas = region[np.random.default_rng(42).choice(len(region), n_theta, replace=False)]
@@ -148,12 +146,12 @@ def baselines(name, system, cfg, centroid, retrain, out_dir, neural=True):
 
 def predictors(name, system, cfg, centroid, retrain, out_dir, methods, ckpt=None):
     """Each predictor maps (x0, theta, steps) to an array (steps, n) of x_1..x_steps."""
-    # the paper evaluation ran our model through numpy in float64
+    # our model is evaluated in float64
     ours = load_model(os.path.join(ckpt or os.path.join(ROOT, "checkpoints"), f"{name}.pt")).double()
     neural = any(m in methods for m in ("PKNN", "PKNN (re-lift)", "Deep Koopman"))
     pknn_model, dk_model, edmd, kedmd = baselines(name, system, cfg, centroid, retrain, out_dir, neural)
 
-    # one case at a time like the paper runs; batching changes the float32 rounding
+    # one case at a time, since batching changes the float32 rounding
     def torch_call(fn, model, dtype):
         def predict(x0, theta, steps):
             x = torch.tensor(x0, dtype=dtype)[None]
@@ -174,7 +172,7 @@ def predictors(name, system, cfg, centroid, retrain, out_dir, methods, ckpt=None
 
 
 def step_errors(x_pred, x_true, floor=0.1):
-    """Normalized error in percent at every step; its running max is the worst-case metric of the paper."""
+    """Normalized error in percent at every step; its running max is the worst-case error."""
     scale = np.maximum(np.linalg.norm(x_true, axis=-1), floor)
     return 100.0 * np.linalg.norm(x_pred - x_true, axis=-1) / scale
 

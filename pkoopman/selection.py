@@ -1,9 +1,8 @@
-"""One-shot selection of the feedback parameter (Algorithm 2 in the paper).
+"""One-shot selection of the feedback parameter.
 
-For the observed x0 we minimize a surrogate cost of the Koopman rollout over theta,
-subject to theta lying in the convex hull of the verified samples and in the box.
-The cost is evaluated in float64 numpy and SLSQP uses its default finite-difference
-gradient.
+For the observed x0, a cost of the predicted rollout is minimized over theta, with
+theta inside the convex hull of the verified samples and inside the box. The cost
+is evaluated in float64 numpy and SLSQP uses finite-difference gradients.
 """
 import time
 
@@ -12,7 +11,7 @@ import torch
 from scipy.optimize import LinearConstraint, minimize
 from scipy.spatial import ConvexHull
 
-# Per-system settings that were used for Table III.
+# Settings per system, as used for Table 3:
 #   horizon       selection horizon H_sel (model steps)
 #   q_z, q_x      weight on sum ||z_k||^2 (Ours-Z) or sum ||x_hat_k||^2 (Ours-X)
 #   x_weights     optional diagonal weights inside the decoded-state sum
@@ -149,8 +148,8 @@ def _minimize(cost, region, system, s):
 
 
 def select_theta(model, region, x0, system, objective="x", settings=None):
-    """Solve the selection problem once. Returns (theta, info). If SLSQP reports
-    failure the mean of the verified samples is returned, as in the paper runs."""
+    """Solve the selection problem once and return (theta, info). If SLSQP fails,
+    the mean of the verified samples is returned."""
     s = settings or SETTINGS[system.name]
     net = NumpyModel(model)
     x0 = np.asarray(x0, dtype=np.float64)

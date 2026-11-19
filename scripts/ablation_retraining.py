@@ -1,14 +1,14 @@
-"""Ablation A (paper Q1, Fig. 4): one policy-conditioned model versus a plain
-Koopman model retrained from scratch at every test parameter (cartpole).
+"""Ablation A (Fig. 4): one policy-conditioned model versus a plain Koopman model
+retrained from scratch at every test parameter, on the cartpole.
 
-For each seed the conditioned model is trained once on random parameters, then
-one unconditioned model is trained per test parameter on data from that
-parameter only. Both are scored with the mean (over 16 initial conditions) of
-the worst-case 12-step error. Data generation time, training time and the time
-the conditioned model needs to produce K(theta) are measured and saved.
+For each seed the conditioned model is trained once on random parameters, and one
+unconditioned model is trained per test parameter on data from that parameter only.
+Both are scored with the mean, over 16 initial conditions, of the worst-case 12-step
+error. Data generation time, training time and the time the conditioned model needs
+to produce K(theta) are saved as well.
 
     python scripts/ablation_retraining.py --seeds 0 8 17 42 99
-    python scripts/ablation_retraining.py --seeds 0 --epochs 2 --n-traj 300 --n-traj-single 100   # smoke test
+    python scripts/ablation_retraining.py --seeds 0 --epochs 2 --n-traj 300 --n-traj-single 100   # quick test
 
 One json per seed is written to runs/ablation_retraining/.
 """
@@ -53,10 +53,9 @@ def make_dataset(system, rs, n=None, alphas=None):
     """Cartpole trajectories of length HORIZON, rejecting the ones that leave
     |p| <= 10, |phi| <= 20 deg.
 
-    rs is a np.random.RandomState and the draws are made in the same order as
-    in the paper experiments (x0, then a random alpha or a random index into
-    `alphas`), so a given seed gives the same data set as the paper runs.
-    """
+    rs is a np.random.RandomState. The draws are made in a fixed order (x0, then a
+    random alpha or a random index into `alphas`), so a seed always gives the same
+    data set."""
     if alphas is not None:
         n = len(alphas)
     X, T = [], []

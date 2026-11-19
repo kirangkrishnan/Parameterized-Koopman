@@ -1,17 +1,15 @@
 """How well do the selection objectives rank controllers on the true plant?
 
-For each initial state, 100 parameters are drawn uniformly from the verified
-region C. Each one is scored three ways: the latent objective J_z and the
-decoded objective J_x of the model (Ours-Z and Ours-X, with the settings of
-pkoopman/selection.py), and the same decoded objective evaluated on the true
-closed loop (J_true). The script reports the Spearman rank correlation of J_z
-and J_x with J_true, and how close the best candidate under each surrogate is
-to the best candidate under J_true.
+For each initial state, 100 parameters are drawn from the verified region C. Each
+one is scored with the latent objective J_z and the decoded objective J_x of the
+model (Ours-Z and Ours-X, settings from pkoopman/selection.py), and with the same
+decoded objective on the true closed loop (J_true). The script reports the Spearman
+rank correlation of J_z and J_x with J_true, and how close the best candidate under
+each objective is to the best one under J_true.
 
-It also runs the one-shot selection itself (SLSQP, as in Table III) and checks
-the selected parameter on the true plant: its true cost compared with the
-centroid of C, and the prediction error of the model at that parameter
-(worst case over 12 steps, the metric of Table II).
+It also runs the one-shot selection (SLSQP, as for Table 3) and checks the selected
+parameter on the true plant: its true cost compared with the centroid of C, and the
+worst-case 12-step prediction error of the model at that parameter.
 
 The initial states are the first N_X0 of the 50-state benchmark draw.
 

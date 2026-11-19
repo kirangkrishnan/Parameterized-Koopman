@@ -9,18 +9,16 @@ is mapped linearly onto a box of physical gains, as for the analytic cartpole.
 import numpy as np
 import gymnasium as gym
 
-# Two gain boxes for the inverted pendulum. The IP model was trained (and its
-# region built) with the "training" box. The control runs behind Table III used
-# the wider "control" box, which is kept as the default so that those runs are
-# reproduced; the newer experiment scripts use the training box.
+# Two gain boxes for the inverted pendulum. The model was trained, and its region
+# built, with the "training" box. The control runs of Table 3 used the wider
+# "control" box, which is the default so that those runs are reproduced.
 IP_GAIN_BOXES = {
     "training": (np.array([-1.0, -3.0, -25.0, -4.0]), np.array([1.0, 1.0, -5.0, -0.5])),
     "control": (np.array([-2.0, -5.0, -40.0, -10.0]), np.array([2.0, 2.0, -5.0, -1.0])),
 }
 IP_GAIN_LOW, IP_GAIN_HIGH = IP_GAIN_BOXES["control"]
 
-# Double pendulum: the box was derived from a scaled LQR gain when the IDP model
-# was trained (gain_low_idp.npy / gain_high_idp.npy in our first version of the code).
+# Double pendulum: a box around a scaled LQR gain
 IDP_GAIN_LOW = np.array([0.07674178187183751, 0.16996379747877746, 1.187511819561223,
                          0.6836618963795779, 4.841099575184763, 0.7238104554244518])
 IDP_GAIN_HIGH = np.array([0.11511267280775626, 0.25494569621816615, 1.7812677293418346,
@@ -72,8 +70,8 @@ class MujocoSystem:
 
     def rollout(self, x0, policy, steps):
         """Run policy(x) -> u from x0. After termination the last state is repeated
-        and the input set to zero (as in the paper runs).
-        Returns states (steps+1, n), inputs (steps,) and the number of steps done."""
+        and the input is set to zero. Returns states (steps+1, n), inputs (steps,)
+        and the number of steps done."""
         x = self.reset(x0)
         traj, inputs = [x.copy()], []
         done = steps
@@ -143,7 +141,7 @@ class InvertedPendulum(MujocoSystem):
 class InvertedDoublePendulum(MujocoSystem):
     """State [p, pd, th1, th1d, th2, th2d], angles recovered with arctan2 from the
     sin/cos entries of the observation. u = -gains . [p, pd, sin th1, th1d, sin th2, th2d],
-    cast to float32 and clipped to [-1, 1] (as in the paper runs)."""
+    cast to float32 and clipped to [-1, 1]."""
     name = "mujoco_idp"
     env_id = "InvertedDoublePendulum-v5"
     n, p = 6, 6

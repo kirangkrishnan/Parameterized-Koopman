@@ -1,13 +1,14 @@
-"""Koopman MPC baselines with control (Table III): z+ = A z + B u, x = decoder(z).
+"""Koopman MPC baselines for the control comparison (Table 3).
 
-K-MPC (EDMD): polynomial (and trig) dictionary fitted by ridge regression on
-one-step transitions under random inputs; the decoder reads the linear terms.
-K-MPC (Deep): MLP encoder/decoder with a learned (A, B), trained once per system
-on random-input trajectories (models in checkpoints/control/).
+Both models are linear in the lifted state, z+ = A z + B u, with x = decoder(z).
+K-MPC (EDMD) fits a polynomial and trig dictionary by ridge regression on one-step
+transitions under random inputs and reads the state from the linear terms.
+K-MPC (Deep) has an MLP encoder and decoder with a learned (A, B); the trained
+models are in checkpoints/control/.
 
-Both are used in a receding-horizon loop: at each step the measured state is
-lifted, a quadratic cost on the decoded prediction is minimized over the input
-sequence with IPOPT, and the first input is applied.
+At every step the measured state is lifted, a quadratic cost on the decoded
+prediction is minimized over the input sequence with IPOPT, and the first input
+is applied.
 """
 import time
 from itertools import combinations_with_replacement, count
@@ -140,7 +141,7 @@ def collect_transitions(system, settings, u_max, nu=1, seed=0):
     """One-step transitions of the open-loop plant from random states and random
     constant inputs (integrated like the closed-loop runs, RK45, max_step dt/4)."""
     s = settings
-    # same stream as np.random.seed(seed) in the paper runs, so the saved matrices are reproduced
+    # same stream as np.random.seed(seed), so the saved matrices are reproduced
     rng = np.random.RandomState(seed)
     lift = Dictionary(system.n, s["degree"], s["angles"])
     idx, bound = s["keep"]

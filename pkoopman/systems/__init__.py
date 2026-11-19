@@ -20,9 +20,9 @@ def get_system(name, **kwargs):
 
 
 def experiment_system(name, **kwargs):
-    """The system as used by the newer experiment scripts. Same as get_system,
-    except that the inverted pendulum maps theta onto the gain box its model was
-    trained with (Table III used a wider box, see mujoco_envs.py)."""
+    """Same as get_system, except that the inverted pendulum uses the gain box its
+    model was trained with. The control runs of Table 3 use the wider box (see
+    mujoco_envs.py)."""
     if name == "mujoco_ip":
         kwargs.setdefault("gain_box", "training")
     return get_system(name, **kwargs)

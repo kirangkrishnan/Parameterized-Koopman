@@ -1,10 +1,10 @@
-"""Fig. 7: prediction error of all methods, from the json files of prediction_benchmark.py.
+"""Fig. 6: prediction error of all methods, from the json files of prediction_benchmark.py.
 
 Top row: worst-case error over 12 steps (bar = mean, whisker = one std, black
 tick = median). Bottom row: mean error at step k, k = 1..20.
 
     python scripts/plot_prediction.py
-    python scripts/plot_prediction.py --systems vdp cartpole --out fig7.png
+    python scripts/plot_prediction.py --systems vdp cartpole --out fig6.png
 """
 import argparse
 import json

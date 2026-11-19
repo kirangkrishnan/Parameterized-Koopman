@@ -1,10 +1,9 @@
-"""Nonlinear MPC baselines (Table III).
+"""Nonlinear MPC baselines (Table 3).
 
-Analytic systems: single shooting on the true model, RK4 discretization, IPOPT,
-warm started from the shifted previous solution. MuJoCo inverted pendulum: a
-cart-pole model whose parameters are read from the MuJoCo model, with input-rate
-and pole-angle constraints. No NMPC is provided for the double pendulum: the
-script behind that Table III entry has been lost.
+Analytic systems: single shooting on the true model with RK4 and IPOPT, warm started
+from the shifted previous solution. MuJoCo inverted pendulum: a cart-pole model with
+parameters read from the MuJoCo model, plus input-rate and pole-angle constraints.
+There is no NMPC for the double pendulum in this repository.
 """
 import time
 from itertools import count

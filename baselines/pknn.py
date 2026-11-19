@@ -1,10 +1,9 @@
-"""Parametric Koopman neural network (PKNN), following the code of Guo et al.
+"""Parametric Koopman neural network (PKNN), after the code of Guo et al.
 
-The lifted state is Psi(x) = [1, x, g(x)] with a learned dictionary g, and a
-second network maps theta to the Koopman matrix K(theta). There is no decoder:
-the state is read off the lifted vector directly. The model is trained on
-one-step pairs with the loss || Psi(x_{k+1}) - Psi(x_k) K(theta) ||^2.
-Row-vector convention as in Guo et al.'s implementation, Psi_next = Psi K.
+The lifted state is Psi(x) = [1, x, g(x)] with a learned dictionary g, and a second
+network maps theta to the Koopman matrix K(theta). There is no decoder, the state is
+read from the lifted vector. Training uses one-step pairs and the loss
+|| Psi(x_{k+1}) - Psi(x_k) K(theta) ||^2, with row vectors as in Guo et al.
 """
 import torch
 import torch.nn as nn

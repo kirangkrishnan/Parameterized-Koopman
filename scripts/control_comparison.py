@@ -1,20 +1,19 @@
-"""Closed-loop control comparison (Q3, Table III and Fig. 8 of the paper).
+"""Control comparison (Table 3 and Fig. 7).
 
-Runs one method on one system from the fixed initial state of Table III and saves
-the trajectory, the applied inputs and the timings to
-runs/control_comparison/<system>_<method>_seed<seed>.npz (+ .json).
+Runs one method on one system from the initial state of Table 3 and saves the
+trajectory, the inputs and the timings to
+runs/control_comparison/<system>_<method>_seed<seed>.npz (and .json).
 
-  python scripts/control_comparison.py --system vdp --method ours_z
-  python scripts/control_comparison.py --system mujoco_ip --method nmpc --steps 100
+    python scripts/control_comparison.py --system vdp --method ours_z
+    python scripts/control_comparison.py --system mujoco_ip --method nmpc --steps 100
 
-Methods: ours_z, ours_x (one-shot selection, then fixed feedback), nmpc,
-kmpc_edmd, kmpc_deep. All pipelines are deterministic; the seed only names the
-output (the paper averages wall-clock times over seeds 8, 17, 42, 0, 99).
+Methods: ours_z, ours_x (one-shot selection, then fixed feedback), nmpc, kmpc_edmd
+and kmpc_deep. Everything is deterministic, so the seed only names the output;
+Table 3 averages the wall-clock times over seeds 8, 17, 42, 0 and 99.
 
-t_tot follows the rule used for Table III: Ours = one-time selection plus the
-wall time of the closed-loop episode (both are also stored separately as t_select
-and t_episode), NMPC = sum of the optimizer calls, K-MPC = wall time of the whole
-episode. Ours selects inside the verified region checkpoints/<system>_region.npy.
+t_tot is the selection time plus the episode time for Ours (both are also saved, as
+t_select and t_episode), the sum of the optimizer calls for NMPC, and the episode
+time for K-MPC. Ours selects inside checkpoints/<system>_region.npy.
 """
 import argparse
 import json
@@ -42,7 +41,7 @@ EPISODES = {
     "mujoco_idp": dict(x0=[0.0, 0.0, 0.05, 0.0, 0.05, 0.0], T=20.0),
 }
 METHODS = ["ours_z", "ours_x", "nmpc", "kmpc_edmd", "kmpc_deep"]
-# entries of Table III that have no code here (N/E, terminated, or lost script)
+# entries of Table 3 that have no code here (N/E, terminated, or no script)
 MISSING = {("mujoco_ip", "kmpc_edmd"), ("mujoco_idp", "kmpc_edmd"),
            ("mujoco_idp", "kmpc_deep"), ("mujoco_idp", "nmpc")}
 
@@ -139,8 +138,7 @@ def main():
         solve_times = []
 
         def policy(x):
-            # the float32 casts reproduce what the paper runs fed to the
-            # deep encoder and to the MuJoCo IP environment
+            # the deep encoder and the MuJoCo IP environment get float32 states
             u = np.ravel(ctrl.solve(x.astype(np.float32) if method == "kmpc_deep" else x))
             solve_times.append(ctrl.solve_time)
             if mujoco:

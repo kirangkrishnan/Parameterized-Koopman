@@ -1,8 +1,7 @@
-"""Deep Koopman autoencoder in the style of Lusch et al. with one fixed K.
+"""Deep Koopman autoencoder (Lusch et al.) with one fixed K that never sees theta.
 
-The model never sees theta. It is trained on the same mixed-theta trajectories
-as PKNN, so it has to fit one linear model to the whole closed-loop family.
-Column-vector convention z_{k+1} = K z_k.
+It is trained on the same mixed-theta trajectories as PKNN, so one linear model has
+to fit the whole closed-loop family. Column vectors, z_{k+1} = K z_k.
 """
 import torch
 import torch.nn as nn
